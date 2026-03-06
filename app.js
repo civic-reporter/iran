@@ -182,11 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="panel-actions">
                 <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="panel-btn panel-btn-primary">
-                    <span class="btn-icon">🔗</span> Open Source Page — ${article.source}
+                    <span class="btn-icon">🔗</span> Read Full Article — ${article.source}
                 </a>
-                ${article.link ? `<a href="${article.link}" target="_blank" rel="noopener noreferrer" class="panel-btn panel-btn-secondary">
-                    <span class="btn-icon">📄</span> Open Original Article Directly
-                </a>` : ''}
                 <a href="https://news.google.com/search?q=${encodeURIComponent(c.name + ' Iran conflict')}" target="_blank" rel="noopener noreferrer" class="panel-btn panel-btn-secondary">
                     <span class="btn-icon">🌐</span> More ${c.name} News on Google
                 </a>
