@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iran War News Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-top">
+                <div class="breaking-badge">LIVE UPDATES</div>
+                <span class="header-date" id="currentDate"></span>
+            </div>
+            <h1 class="site-title">Iran War News Tracker</h1>
+            <p class="site-subtitle">Monitoring the US-Israel-Iran conflict and its impact across 17+ nations</p>
+        </div>
+    </header>
+
+    <!-- Conflict Map / Stats Bar -->
+    <section class="stats-bar">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">17+</span>
+                    <span class="stat-label">Countries Affected</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">3</span>
+                    <span class="stat-label">Primary Nations</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">14</span>
+                    <span class="stat-label">Impacted Neighbors</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">2</span>
+                    <span class="stat-label">Continents Involved</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Controls -->
+    <section class="filter-section">
+        <div class="container">
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="countrySelect" class="filter-label">Filter by Country:</label>
+                    <select id="countrySelect" class="country-dropdown">
+                        <option value="all">All Countries</option>
+                        <optgroup label="Primary Nations">
+                            <option value="iran">🇮🇷 Iran</option>
+                            <option value="usa">🇺🇸 United States</option>
+                            <option value="israel">🇮🇱 Israel</option>
+                        </optgroup>
+                        <optgroup label="Impacted Countries">
+                            <option value="india">🇮🇳 India</option>
+                            <option value="lebanon">🇱🇧 Lebanon</option>
+                            <option value="syria">🇸🇾 Syria</option>
+                            <option value="qatar">🇶🇦 Qatar</option>
+                            <option value="bahrain">🇧🇭 Bahrain</option>
+                            <option value="uae">🇦🇪 United Arab Emirates</option>
+                            <option value="jordan">🇯🇴 Jordan</option>
+                            <option value="saudi-arabia">🇸🇦 Saudi Arabia</option>
+                            <option value="kuwait">🇰🇼 Kuwait</option>
+                            <option value="iraq">🇮🇶 Iraq</option>
+                            <option value="turkey">🇹🇷 Turkey</option>
+                            <option value="cyprus">🇨🇾 Cyprus</option>
+                            <option value="sri-lanka">🇱🇰 Sri Lanka</option>
+                            <option value="oman">🇴🇲 Oman</option>
+                            <option value="azerbaijan">🇦🇿 Azerbaijan</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="categorySelect" class="filter-label">Category:</label>
+                    <select id="categorySelect" class="country-dropdown">
+                        <option value="all">All Categories</option>
+                        <option value="military">Military Operations</option>
+                        <option value="diplomacy">Diplomacy</option>
+                        <option value="humanitarian">Humanitarian</option>
+                        <option value="economic">Economic Impact</option>
+                        <option value="analysis">Analysis</option>
+                    </select>
+                </div>
+                <div class="feed-toggle">
+                    <button class="toggle-btn active" id="btnLive" title="Fetch live news from Google News RSS">🔴
+                        Live</button>
+                    <button class="toggle-btn" id="btnStatic" title="Show pre-loaded static articles">📋 Static</button>
+                </div>
+                <div class="result-count">
+                    <span id="feedBadge" class="feed-badge live">LIVE</span>
+                    Showing <span id="articleCount">0</span> articles
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Grid -->
+    <main class="news-section">
+        <div class="container">
+            <!-- Loading Indicator -->
+            <div class="loading-container" id="loadingContainer">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Fetching live news from <span id="loadingCount">0</span> / 18 countries...</p>
+                <p class="loading-subtext">Pulling the latest headlines from Google News</p>
+            </div>
+            <div class="news-grid" id="newsGrid">
+                <!-- Articles injected by JS -->
+            </div>
+            <div class="no-results" id="noResults" style="display: none;">
+                <div class="no-results-icon">📭</div>
+                <h3>No articles found</h3>
+                <p>Try selecting a different country or category filter.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Countries Map Section -->
+    <section class="countries-section">
+        <div class="container">
+            <h2 class="section-title">Countries Impacted by the Conflict</h2>
+            <div class="country-tags" id="countryTags">
+                <!-- Country tags injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p class="footer-text">Iran War News Tracker &mdash; Aggregating news from multiple sources for
+                informational purposes.</p>
+            <p class="footer-disclaimer">Disclaimer: This site aggregates publicly available news reports. Articles
+                represent the views of their respective publishers. Last updated: <span id="lastUpdated"></span></p>
+        </div>
+    </footer>
+
+    <!-- Side Panel Overlay -->
+    <div class="panel-overlay" id="panelOverlay"></div>
+    <aside class="side-panel" id="sidePanel">
+        <div class="panel-header">
+            <h3 class="panel-title-label">Article Details</h3>
+            <button class="panel-close" id="panelClose" title="Close panel">&times;</button>
+        </div>
+        <div class="panel-content" id="panelContent">
+            <!-- Filled dynamically -->
+        </div>
+    </aside>
+
+    <script src="news-data.js"></script>
+    <script src="live-feed.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
