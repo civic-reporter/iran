@@ -43,4 +43,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add live-news.json
           git commit -m "🔄 Auto-update live news [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git pull --rebase origin main
           git push
