@@ -82,6 +82,122 @@ function stripTags(html) {
         .trim();
 }
 
+// ========== Article Content Extraction ==========
+
+/**
+ * Extract paragraph text from an HTML fragment.
+ * Filters out very short or boilerplate paragraphs.
+ */
+function extractParagraphs(html) {
+    const paragraphs = [];
+    const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+    let m;
+    while ((m = pRegex.exec(html)) !== null) {
+        const text = stripTags(m[1]).trim();
+        // Skip very short lines and common boilerplate
+        if (
+            text.length > 50 &&
+            !/^(sign up|subscribe|newsletter|cookie|©|copyright|advertisement|read more|share this|follow us)/i.test(text)
+        ) {
+            paragraphs.push(text);
+        }
+    }
+    return paragraphs;
+}
+
+/**
+ * Fetch an article URL and attempt to extract its main text content.
+ * Tries <article> tag, common content div patterns, then falls back to all <p> tags.
+ * Returns a trimmed string (max ~2000 chars) or '' on failure.
+ */
+async function extractArticleContent(url, timeoutMs = 10000) {
+    if (!url) return '';
+    try {
+        const html = await Promise.race([
+            fetchUrl(url),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs)),
+        ]);
+
+        let paragraphs = [];
+
+        // Strategy 1: <article> tag
+        const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+        if (articleMatch) {
+            paragraphs = extractParagraphs(articleMatch[1]);
+        }
+
+        // Strategy 2: common content div classes
+        if (paragraphs.length < 2) {
+            const contentPatterns = [
+                /<div[^>]*class="[^"]*article[_-]?body[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+                /<div[^>]*class="[^"]*story[_-]?body[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+                /<div[^>]*class="[^"]*post[_-]?content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+                /<div[^>]*class="[^"]*entry[_-]?content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+                /<div[^>]*class="[^"]*article[_-]?content[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+                /<div[^>]*id="article[_-]?body"[^>]*>([\s\S]*?)<\/div>/i,
+            ];
+            for (const pat of contentPatterns) {
+                const cm = html.match(pat);
+                if (cm) {
+                    const found = extractParagraphs(cm[1]);
+                    if (found.length > paragraphs.length) paragraphs = found;
+                }
+            }
+        }
+
+        // Strategy 3: all <p> tags on the page (noisy but better than nothing)
+        if (paragraphs.length < 2) {
+            paragraphs = extractParagraphs(html);
+        }
+
+        if (paragraphs.length === 0) return '';
+
+        // Join and cap at ~2000 characters
+        let content = paragraphs.join('\n\n');
+        if (content.length > 2000) {
+            content = content.substring(0, 2000).replace(/\s+\S*$/, '') + '…';
+        }
+        return content;
+    } catch (err) {
+        // Timeout, HTTP error, etc. — silently return empty
+        return '';
+    }
+}
+
+/**
+ * Process a batch of articles, extracting content with concurrency limiting.
+ * @param {Array} articles
+ * @param {number} concurrency - max simultaneous fetches
+ * @param {number} delayMs - delay between batches
+ */
+async function enrichArticlesWithContent(articles, concurrency = 5, delayMs = 500) {
+    console.log(`\n📄 Extracting article content (${articles.length} articles, concurrency=${concurrency})...`);
+    let completed = 0;
+
+    for (let i = 0; i < articles.length; i += concurrency) {
+        const batch = articles.slice(i, i + concurrency);
+        const results = await Promise.allSettled(
+            batch.map(async (article) => {
+                const content = await extractArticleContent(article.link);
+                article.content = content;
+                completed++;
+                if (content) {
+                    process.stdout.write(`  ✅ [${completed}/${articles.length}] ${article.title.substring(0, 50)}... (${content.length} chars)\n`);
+                } else {
+                    process.stdout.write(`  ⏭  [${completed}/${articles.length}] ${article.title.substring(0, 50)}... (no content)\n`);
+                }
+            })
+        );
+        // Small delay between batches to be polite
+        if (i + concurrency < articles.length) {
+            await new Promise(r => setTimeout(r, delayMs));
+        }
+    }
+
+    const withContent = articles.filter(a => a.content).length;
+    console.log(`\n📄 Content extraction complete: ${withContent}/${articles.length} articles enriched`);
+}
+
 function parseRssItems(xml) {
     const articles = [];
     // Simple regex-based XML parser (no external deps)
@@ -166,6 +282,9 @@ async function main() {
             console.log(`❌ failed: ${err.message}`);
         }
     }
+
+    // Enrich articles with actual article text (best-effort)
+    await enrichArticlesWithContent(allArticles);
 
     const output = {
         lastUpdated: new Date().toISOString(),

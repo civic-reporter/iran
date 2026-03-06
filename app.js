@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="card-category ${article.category}">${article.category}</span>
                         </div>
                         <div class="card-body">
-                            <h3 class="card-title">${liveIndicator}<a href="${article.link || '#'}">${article.title}</a></h3>
+                            <h3 class="card-title">${liveIndicator}<a href="${article.link || '#'}" target="_blank" rel="noopener noreferrer">${article.title}</a></h3>
                             <p class="card-excerpt">${article.excerpt}</p>
                         </div>
                         <div class="card-meta">
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="card-category ${article.category}">${article.category}</span>
                 </div>
                 <div class="card-body">
-                    <h3 class="card-title">${liveIndicator}<a href="${article.link || '#'}">${article.title}</a></h3>
+                    <h3 class="card-title">${liveIndicator}<a href="${article.link || '#'}" target="_blank" rel="noopener noreferrer">${article.title}</a></h3>
                     <p class="card-excerpt">${article.excerpt}</p>
                 </div>
                 <div class="card-meta">
@@ -144,114 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const d = new Date(dateStr + 'T00:00:00');
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
-
-    // ========== SIDE PANEL LOGIC ==========
-    const sidePanel = document.getElementById('sidePanel');
-    const panelOverlay = document.getElementById('panelOverlay');
-    const panelClose = document.getElementById('panelClose');
-    const panelContent = document.getElementById('panelContent');
-
-    function openPanel(article) {
-        const c = COUNTRIES[article.country];
-        const dateStr = formatDate(article.date);
-
-        // Use actual link for live articles, or Google News search for static ones
-        const sourceUrl = article.link || `https://news.google.com/search?q=${encodeURIComponent(article.title + ' ' + article.source)}`;
-
-        // Find related articles (same country, different article)
-        const activeArticles = getActiveArticles();
-        const related = activeArticles
-            .filter(a => a.country === article.country && a.title !== article.title)
-            .slice(0, 3);
-
-        panelContent.innerHTML = `
-            <div class="panel-article-badges">
-                <span class="card-country">${c.flag} ${c.name}</span>
-                <span class="card-category ${article.category}">${article.category}</span>
-            </div>
-            <h2 class="panel-article-title">${article.title}</h2>
-            <div class="panel-article-meta">
-                <span class="panel-meta-item">📰 ${article.source}</span>
-                <span class="panel-meta-item">📅 ${dateStr}</span>
-            </div>
-            <div class="panel-divider"></div>
-            <div class="panel-article-body">
-                <p class="lead">${article.excerpt}</p>
-                <p>This report was originally published by <strong>${article.source}</strong>, covering the ongoing developments related to the US-Israel-Iran conflict and its impact on ${c.name}.</p>
-                <p>The situation continues to evolve rapidly, with multiple international organizations monitoring the developments closely. Analysts note that the implications for ${c.name} extend beyond immediate security concerns to long-term economic and diplomatic relationships in the region.</p>
-            </div>
-            <div class="panel-actions">
-                <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="panel-btn panel-btn-primary">
-                    <span class="btn-icon">🔗</span> Read Full Article — ${article.source}
-                </a>
-                <a href="https://news.google.com/search?q=${encodeURIComponent(c.name + ' Iran conflict')}" target="_blank" rel="noopener noreferrer" class="panel-btn panel-btn-secondary">
-                    <span class="btn-icon">🌐</span> More ${c.name} News on Google
-                </a>
-            </div>
-            ${related.length ? `
-            <div class="panel-divider"></div>
-            <div class="panel-related">
-                <div class="panel-related-title">Related from ${c.name}</div>
-                ${related.map((r, i) => `
-                    <div class="panel-related-item" data-related-index="${activeArticles.indexOf(r)}">
-                        <span class="related-flag">${COUNTRIES[r.country].flag}</span>
-                        <span class="related-title">${r.title}</span>
-                    </div>
-                `).join('')}
-            </div>` : ''}
-        `;
-
-        // Attach click handlers to related items
-        panelContent.querySelectorAll('.panel-related-item').forEach(el => {
-            el.addEventListener('click', () => {
-                const idx = parseInt(el.dataset.relatedIndex, 10);
-                openPanel(activeArticles[idx]);
-            });
-        });
-
-        sidePanel.classList.add('open');
-        panelOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        panelContent.scrollTop = 0;
-    }
-
-    function closePanel() {
-        sidePanel.classList.remove('open');
-        panelOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    panelClose.addEventListener('click', closePanel);
-    panelOverlay.addEventListener('click', closePanel);
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closePanel();
-    });
-
-    // Delegate click on news cards to open side panel
-    newsGrid.addEventListener('click', (e) => {
-        const card = e.target.closest('.news-card');
-        if (!card) return;
-
-        // Prevent default if they clicked an <a> tag
-        const anchor = e.target.closest('a');
-        if (anchor) e.preventDefault();
-
-        // Find article index from the card's position
-        const cards = Array.from(newsGrid.querySelectorAll('.news-card'));
-        const cardIndex = cards.indexOf(card);
-
-        // Get the currently filtered & sorted articles
-        const selectedCountry = countrySelect.value;
-        const selectedCategory = categorySelect.value;
-        let filtered = getActiveArticles().slice();
-        if (selectedCountry !== 'all') filtered = filtered.filter(a => a.country === selectedCountry);
-        if (selectedCategory !== 'all') filtered = filtered.filter(a => a.category === selectedCategory);
-        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        if (filtered[cardIndex]) {
-            openPanel(filtered[cardIndex]);
-        }
-    });
 
     // ---- Feed toggle ----
     function setMode(mode) {
