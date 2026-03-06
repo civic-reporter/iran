@@ -27,9 +27,11 @@
 
 html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
 }
 
 body {
+    overflow-x: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg);
     color: var(--text);
@@ -698,7 +700,7 @@ body {
     right: 0;
     width: 520px;
     max-width: 92vw;
-    height: 100vh;
+    height: 100%;
     background: var(--card-bg);
     z-index: 1000;
     box-shadow: -4px 0 30px rgba(0, 0, 0, 0.18);
@@ -707,6 +709,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .side-panel.open {
@@ -914,7 +918,14 @@ body {
 
 @media (max-width: 580px) {
     .side-panel {
-        width: 100vw;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
+        left: 0;
+        right: 0;
+        transform: translateX(100%);
+    }
+
+    .side-panel.open {
+        transform: translateX(0);
     }
 }
