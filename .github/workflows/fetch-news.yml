@@ -12,6 +12,10 @@ on:
     paths:
       - "fetch-news.js"
 
+concurrency:
+  group: fetch-news
+  cancel-in-progress: false
+
 jobs:
   fetch-news:
     runs-on: ubuntu-latest
@@ -22,6 +26,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -43,5 +49,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add live-news.json
           git commit -m "🔄 Auto-update live news [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git pull --rebase origin main
-          git push
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0 || sleep 5
+          done
+          echo "Push failed after 3 attempts" && exit 1
